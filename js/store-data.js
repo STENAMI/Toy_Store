@@ -718,8 +718,8 @@
     },
   };
 
-  dictionary.ru.categoryLabel = "РљР°С‚РµРіРѕСЂРёСЏ";
-  dictionary.ru.categoryAll = "Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё";
+  dictionary.ru.categoryLabel = "\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f";
+  dictionary.ru.categoryAll = "\u0412\u0441\u0435 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438";
   dictionary.en.categoryLabel = "Category";
   dictionary.en.categoryAll = "All categories";
 

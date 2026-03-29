@@ -851,17 +851,19 @@
     const form = document.getElementById("adminProductForm");
     const startEditBtn = document.getElementById("btnStartEdit");
     const editLock = form.querySelector(".admin-edit-lock");
-    const grid = form.querySelector(".admin-product-form__grid");
+    const hero = form.querySelector(".admin-product-form__hero");
     const imagesField = form.querySelector('textarea[name="images"]');
     const uploadField = document.getElementById("adminImageUpload");
     const formFields = form.querySelectorAll("input, textarea, select, button");
 
-    if (editLock && grid) {
-      grid.before(editLock);
+    if (editLock && hero) {
+      hero.after(editLock);
       const title = editLock.querySelector(".admin-edit-lock__title");
       const text = editLock.querySelector(".admin-edit-lock__text");
-      if (title) title.textContent = "Редактирование выключено";
-      if (text) text.textContent = "Нажмите «Начать редактирование», чтобы внести изменения.";
+      if (title) title.textContent = "\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0432\u044b\u043a\u043b\u044e\u0447\u0435\u043d\u043e";
+      if (text)
+        text.textContent =
+          "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u00ab\u041d\u0430\u0447\u0430\u0442\u044c \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435\u00bb, \u0447\u0442\u043e\u0431\u044b \u0432\u043d\u0435\u0441\u0442\u0438 \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f.";
     }
 
     function setEditing(enabled) {
