@@ -1140,6 +1140,11 @@ a:hover {
 }
 
 @media (max-width: 640px) {
+  .container {
+    width: 100%;
+    padding-inline: 16px;
+  }
+
   .header__inner {
     gap: 0.5rem;
   }
