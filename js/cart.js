@@ -422,22 +422,42 @@
     track.addEventListener("scroll", () => {
       if (raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const cards = Array.from(track.querySelectorAll(".product"));
-        if (!cards.length) return;
-        const center = track.scrollLeft + track.clientWidth / 2;
-        let nextIndex = 0;
-        let best = Infinity;
-        cards.forEach((card, index) => {
-          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-          const distance = Math.abs(cardCenter - center);
-          if (distance < best) {
-            best = distance;
-            nextIndex = index;
-          }
-        });
-        state.popularIndex = nextIndex;
+        state.popularIndex = getPopularIndexFromScroll(track);
       });
     });
+  }
+
+  function getPopularIndexFromScroll(track) {
+    const cards = Array.from(track.querySelectorAll(".product"));
+    if (!cards.length) return 0;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let nextIndex = 0;
+    let best = Infinity;
+    cards.forEach((card, index) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - center);
+      if (distance < best) {
+        best = distance;
+        nextIndex = index;
+      }
+    });
+    return nextIndex;
+  }
+
+  function getPopularSnapIndex(track) {
+    const cards = Array.from(track.querySelectorAll(".product"));
+    if (!cards.length) return 0;
+    const scroll = track.scrollLeft;
+    let nextIndex = 0;
+    let best = Infinity;
+    cards.forEach((card, index) => {
+      const distance = Math.abs(card.offsetLeft - scroll);
+      if (distance < best) {
+        best = distance;
+        nextIndex = index;
+      }
+    });
+    return nextIndex;
   }
 
   function updatePopularPosition() {
@@ -457,10 +477,7 @@
     }
     const active = cards[state.popularIndex];
     if (!active) return;
-    const styles = window.getComputedStyle(track);
-    const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
-    const targetLeft = Math.min(maxScroll, Math.max(0, active.offsetLeft - gap));
-    track.scrollTo({ left: targetLeft, behavior: "smooth" });
+    track.scrollTo({ left: Math.min(maxScroll, Math.max(0, active.offsetLeft)), behavior: "smooth" });
   }
 
   function renderFavoritesSection() {
@@ -918,11 +935,15 @@
       renderShop();
     });
     document.getElementById("btnPopularPrev")?.addEventListener("click", () => {
-      state.popularIndex -= 1;
+      const track = document.getElementById("popularTrack");
+      const baseIndex = track ? getPopularSnapIndex(track) : state.popularIndex;
+      state.popularIndex = baseIndex - 1;
       updatePopularPosition();
     });
     document.getElementById("btnPopularNext")?.addEventListener("click", () => {
-      state.popularIndex += 1;
+      const track = document.getElementById("popularTrack");
+      const baseIndex = track ? getPopularSnapIndex(track) : state.popularIndex;
+      state.popularIndex = baseIndex + 1;
       updatePopularPosition();
     });
     document.querySelectorAll("[data-language]").forEach((button) => {
