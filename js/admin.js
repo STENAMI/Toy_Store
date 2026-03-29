@@ -38,6 +38,16 @@
 
   let activeSupportThreadId = null;
   let activeProductId = null;
+  let isEditingProduct = false;
+  let editingTimer = null;
+
+  function markEditingProduct() {
+    isEditingProduct = true;
+    if (editingTimer) window.clearTimeout(editingTimer);
+    editingTimer = window.setTimeout(() => {
+      isEditingProduct = false;
+    }, 4000);
+  }
 
   function resolveBasePath() {
     const path = window.location.pathname || "/";
@@ -782,6 +792,7 @@
       .join("");
     productCatalogList.querySelectorAll("[data-product-id]").forEach((button) => {
       button.addEventListener("click", () => {
+        isEditingProduct = false;
         activeProductId = button.getAttribute("data-product-id");
         renderProductList();
       });
@@ -794,6 +805,7 @@
       productEditor.innerHTML = `<div class="admin-empty admin-empty--thread">${escapeHtml(adminT("chooseProduct"))}</div>`;
       return;
     }
+    isEditingProduct = false;
     productEditor.innerHTML = `
       <form class="admin-product-form" id="adminProductForm">
         <div class="admin-product-form__hero">
@@ -842,6 +854,11 @@
     const form = document.getElementById("adminProductForm");
     const imagesField = form.querySelector('textarea[name="images"]');
     const uploadField = document.getElementById("adminImageUpload");
+    form.querySelectorAll("input, textarea, select").forEach((field) => {
+      field.addEventListener("input", markEditingProduct);
+      field.addEventListener("change", markEditingProduct);
+      field.addEventListener("focus", markEditingProduct);
+    });
     document.getElementById("btnMoveImageUp")?.addEventListener("click", () => reorderImages(imagesField, -1));
     document.getElementById("btnMoveImageDown")?.addEventListener("click", () => reorderImages(imagesField, 1));
     uploadField?.addEventListener("change", async () => {
@@ -895,6 +912,7 @@
         }
         return isMainHero ? { ...item, mainHero: false } : item;
       });
+      isEditingProduct = false;
       saveProducts(next);
       renderProductList();
     });
@@ -994,7 +1012,9 @@
     renderUsers(users);
     renderSupportList(threads);
     renderTopProducts(getTopProducts(orders));
-    renderProductList();
+    if (!isEditingProduct) {
+      renderProductList();
+    }
   }
 
   function applyAdminSettingsToUI() {
