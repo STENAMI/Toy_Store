@@ -1204,6 +1204,27 @@ a:hover {
     border-top: 1px solid rgba(45, 38, 64, 0.08);
   }
 
+  .nav__switchers {
+    display: grid;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(45, 38, 64, 0.08);
+  }
+
+  .nav__switchers .header-switchers {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .nav__switchers .header-switcher {
+    font-size: 0.78rem;
+  }
+
+  .header__actions .header-switchers {
+    display: none;
+  }
+
   .header {
     position: relative;
   }
@@ -1221,6 +1242,51 @@ a:hover {
 
   .user-badge__name {
     max-width: 100px;
+  }
+
+  .hero__badge {
+    left: 1rem;
+    right: 1rem;
+    font-size: 0.7rem;
+  }
+
+  .hero__caption {
+    left: 1rem;
+    right: 1rem;
+    top: 3.4rem;
+    max-width: none;
+  }
+
+  .hero__caption h2 {
+    white-space: normal;
+    font-size: clamp(1.4rem, 7vw, 2rem);
+  }
+
+  .hero__caption h2.is-marquee span {
+    animation: none;
+  }
+
+  .hero__caption h2 span {
+    min-width: 0;
+  }
+
+  .hero__caption-actions {
+    gap: 0.5rem;
+  }
+
+  .hero__price-badge,
+  .hero__ghost-link {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .footer__link {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .footer__link--accent {
+    flex-basis: 100%;
   }
 }
 
@@ -1307,6 +1373,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .footer__link {
