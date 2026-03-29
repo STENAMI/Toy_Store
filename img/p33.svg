@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="g-p33" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3fff1"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="shadow-p33" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#72bf65" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="40" fill="url(#g-p33)"/>
+  <circle cx="320" cy="70" r="42" fill="#cff0c5" opacity="0.55"/>
+  <circle cx="80" cy="320" r="54" fill="#72bf65" opacity="0.10"/>
+  <rect x="36" y="36" width="328" height="328" rx="34" fill="#ffffff" filter="url(#shadow-p33)"/>
+  <rect x="56" y="56" width="288" height="288" rx="28" fill="#cff0c5" opacity="0.26"/>
+  <circle cx="146" cy="282" r="24" fill="#ffffff" stroke="#325e2d" stroke-width="8"/>
+  <circle cx="252" cy="282" r="24" fill="#ffffff" stroke="#325e2d" stroke-width="8"/>
+  <path d="M146 282 h88 l34 -104 h26" fill="none" stroke="#72bf65" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M268 178 v-62" fill="none" stroke="#325e2d" stroke-width="12" stroke-linecap="round"/>
+  <path d="M242 116 h54" fill="none" stroke="#325e2d" stroke-width="12" stroke-linecap="round"/>
+  <path d="M184 254 h74" stroke="#325e2d" stroke-width="10" stroke-linecap="round"/>
+</svg>

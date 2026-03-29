@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <linearGradient id="g-p41" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff9e8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+    <filter id="shadow-p41" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#f1bb3d" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="400" height="400" rx="40" fill="url(#g-p41)"/>
+  <circle cx="320" cy="70" r="42" fill="#ffe29a" opacity="0.55"/>
+  <circle cx="80" cy="320" r="54" fill="#f1bb3d" opacity="0.10"/>
+  <rect x="36" y="36" width="328" height="328" rx="34" fill="#ffffff" filter="url(#shadow-p41)"/>
+  <rect x="56" y="56" width="288" height="288" rx="28" fill="#ffe29a" opacity="0.26"/>
+  <rect x="110" y="146" width="180" height="104" rx="24" fill="#ffffff" stroke="#7e5d11" stroke-width="8"/>
+  <rect x="134" y="170" width="98" height="34" rx="10" fill="#f1bb3d" opacity="0.28"/>
+  <rect x="238" y="170" width="28" height="58" rx="10" fill="#f1bb3d" opacity="0.28"/>
+  <circle cx="156" cy="264" r="20" fill="#7e5d11"/>
+  <circle cx="244" cy="264" r="20" fill="#7e5d11"/>
+  <circle cx="156" cy="264" r="8" fill="#ffffff"/>
+  <circle cx="244" cy="264" r="8" fill="#ffffff"/>
+</svg>

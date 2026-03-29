@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Игрушкино — админ-панель</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-page">
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <header class="header admin-header">
+    <div class="container header__inner">
+      <a href="index.html" class="logo">
+        <span class="logo__icon">🧸</span>
+        <span class="logo__text" data-admin-i18n="brand">Игрушкино</span>
+      </a>
+      <nav class="nav admin-nav">
+        <a href="#adminOverview" data-admin-i18n="navOverview">Обзор</a>
+        <a href="#adminOrders" data-admin-i18n="navOrders">Заказы</a>
+        <a href="#adminSupport" data-admin-i18n="navSupport">Поддержка</a>
+        <a href="#adminProducts" data-admin-i18n="navProducts">Товары</a>
+        <a href="#adminUsers" data-admin-i18n="navUsers">Клиенты</a>
+      </nav>
+      <div class="admin-header__actions">
+        <div class="header-switcher">
+          <span data-admin-i18n="languageLabel">Язык</span>
+          <div class="segmented-switch" id="adminLanguageSwitch">
+            <button type="button" class="segmented-switch__option" data-admin-language="ru">RU</button>
+            <button type="button" class="segmented-switch__option" data-admin-language="en">EN</button>
+          </div>
+        </div>
+        <label class="header-switcher">
+          <span data-admin-i18n="currencyLabel">Валюта</span>
+          <select id="adminCurrencySelect">
+            <option value="RUB">RUB</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </label>
+        <div class="header-switcher">
+          <span data-admin-i18n="themeLabel">Тема</span>
+          <div class="segmented-switch" id="adminThemeSwitch">
+            <button type="button" class="segmented-switch__option" data-admin-theme="dark" data-admin-i18n="themeDark">Тёмная</button>
+            <button type="button" class="segmented-switch__option" data-admin-theme="light" data-admin-i18n="themeLight">Светлая</button>
+          </div>
+        </div>
+        <button type="button" class="btn btn--outline hidden" id="btnAdminLogout" data-admin-i18n="logout">Выйти</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-hero">
+      <div class="container admin-hero__grid">
+        <div class="admin-hero__content">
+          <p class="eyebrow" data-admin-i18n="heroEyebrow">Редактор магазина</p>
+          <h1 data-admin-i18n="heroTitle">Управление каталогом, заказами и чатами поддержки</h1>
+          <p class="admin-hero__lead" data-admin-i18n="heroLead">Теперь из админки можно менять цены, описания, аудиторию, материал, популярность и набор изображений товара. Список картинок хранится в каталоге и сразу появляется на витрине.</p>
+          <div class="admin-demo-note">
+            <strong data-admin-i18n="heroLogin">Вход администратора:</strong>
+            <span>admin@igrushkino.ru / Admin123!</span>
+          </div>
+        </div>
+        <div class="admin-hero__card">
+          <div class="admin-hero__visual">
+            <div class="admin-mini admin-mini--pink"></div>
+            <div class="admin-mini admin-mini--blue"></div>
+            <div class="admin-mini admin-mini--yellow"></div>
+          </div>
+          <p data-admin-i18n="heroSync">Изменения товаров сохраняются в браузере и сразу синхронизируются с витриной магазина, корзиной и карточкой товара.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-login-section" id="adminLoginSection">
+      <div class="container">
+        <div class="admin-login-card">
+          <div>
+            <h2 data-admin-i18n="loginTitle">Вход для администратора</h2>
+            <p class="section__subtitle" data-admin-i18n="loginLead">Панель работает локально и использует данные только этого браузера.</p>
+          </div>
+          <form class="form admin-login-form" id="adminLoginForm">
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" autocomplete="username" required />
+            </label>
+            <label class="field">
+              <span data-admin-i18n="password">Пароль</span>
+              <input type="password" name="password" autocomplete="current-password" required />
+            </label>
+            <button type="submit" class="btn btn--primary btn--block" data-admin-i18n="openPanel">Открыть панель</button>
+            <p class="form__error" id="adminLoginError" role="alert"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-dashboard hidden" id="adminDashboard">
+      <div class="container">
+        <section class="admin-toolbar" id="adminOverview">
+          <div class="admin-toolbar__group">
+            <button type="button" class="btn btn--primary" id="btnRefreshAdmin" data-admin-i18n="refresh">Обновить</button>
+            <button type="button" class="btn btn--outline" id="btnExportData" data-admin-i18n="exportJson">Экспорт JSON</button>
+            <button type="button" class="btn btn--ghost" id="btnSeedDemo" data-admin-i18n="seedData">Добавить данные</button>
+          </div>
+          <div class="admin-toolbar__group">
+            <button type="button" class="btn btn--ghost" id="btnClearDemo" data-admin-i18n="clearData">Очистить данные</button>
+          </div>
+        </section>
+
+        <section class="admin-stats" id="statsGrid"></section>
+
+        <section class="admin-section admin-section--orders" id="adminOrders">
+          <div class="admin-section__head">
+            <div>
+              <p class="admin-section__eyebrow" data-admin-i18n="section1">Раздел 1</p>
+              <h2 data-admin-i18n="ordersTitle">Заказы</h2>
+              <p class="section__subtitle" data-admin-i18n="ordersLead">Адрес доставки, товары заказа, статусы и локальная история покупок.</p>
+            </div>
+            <label class="search-field admin-search">
+              <span class="search-field__icon" aria-hidden="true">🔎</span>
+              <input type="search" id="ordersSearch" data-admin-placeholder="ordersSearch" placeholder="Поиск по номеру, адресу или товару" />
+            </label>
+          </div>
+          <div class="admin-orders-list" id="ordersList"></div>
+        </section>
+
+        <section class="admin-section admin-section--support" id="adminSupport">
+          <div class="admin-section__head">
+            <div>
+              <p class="admin-section__eyebrow" data-admin-i18n="section2">Раздел 2</p>
+              <h2 data-admin-i18n="supportTitle">Поддержка</h2>
+              <p class="section__subtitle" data-admin-i18n="supportLead">Чаты пользователей, статусы и ответы из одной рабочей области.</p>
+            </div>
+            <label class="search-field admin-search">
+              <span class="search-field__icon" aria-hidden="true">🔎</span>
+              <input type="search" id="supportSearch" data-admin-placeholder="supportSearch" placeholder="Поиск по теме, email или тексту" />
+            </label>
+          </div>
+          <div class="admin-support-workspace">
+            <aside class="admin-support-list" id="supportThreadsList"></aside>
+            <section class="admin-support-thread">
+              <div class="admin-empty admin-empty--thread" id="adminSupportEmpty">
+                <h3 data-admin-i18n="selectRequest">Выберите обращение</h3>
+                <p data-admin-i18n="selectRequestLead">Откройте чат слева, чтобы увидеть историю сообщений и ответить пользователю.</p>
+              </div>
+              <div class="admin-thread hidden" id="adminSupportThreadView">
+                <div class="admin-thread__head" id="adminSupportThreadHeader"></div>
+                <div class="admin-thread__messages" id="adminSupportMessages"></div>
+                <form class="admin-thread__composer" id="adminSupportReplyForm">
+                  <label class="field">
+                    <span data-admin-i18n="replyToUser">Ответ пользователю</span>
+                    <textarea id="adminSupportComposer" name="message" rows="4" required data-admin-placeholder="supportReply" placeholder="Напишите ответ в чат"></textarea>
+                  </label>
+                  <div class="admin-thread__composer-footer">
+                    <p class="admin-note" id="adminSupportHint" data-admin-i18n="supportHintDefault">После ответа диалог станет доступен пользователю в его разделе обращений.</p>
+                    <button type="submit" class="btn btn--primary" data-admin-i18n="sendReply">Отправить ответ</button>
+                  </div>
+                </form>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="admin-section admin-section--products" id="adminProducts">
+          <div class="admin-section__head">
+            <div>
+              <p class="admin-section__eyebrow" data-admin-i18n="section3">Раздел 3</p>
+              <h2 data-admin-i18n="catalogTitle">Каталог товаров</h2>
+              <p class="section__subtitle" data-admin-i18n="catalogLead">Меняйте цену, описания, возраст, материал и изображения. Картинки можно добавлять, удалять и менять их последовательность через список URL.</p>
+            </div>
+            <label class="search-field admin-search">
+              <span class="search-field__icon" aria-hidden="true">🔎</span>
+              <input type="search" id="productsSearch" data-admin-placeholder="productsSearch" placeholder="Поиск по названию, описанию или материалу" />
+            </label>
+          </div>
+          <div class="admin-products-workspace">
+            <aside class="admin-product-list" id="adminProductList"></aside>
+            <section class="admin-product-editor" id="adminProductEditor"></section>
+          </div>
+        </section>
+
+        <section class="admin-lower-grid">
+          <article class="admin-section admin-section--users" id="adminUsers">
+            <div class="admin-section__head">
+              <div>
+                <p class="admin-section__eyebrow" data-admin-i18n="section4">Раздел 4</p>
+                <h2 data-admin-i18n="usersTitle">Клиенты</h2>
+                <p class="section__subtitle" data-admin-i18n="usersLead">Зарегистрированные пользователи и быстрый поиск по базе.</p>
+              </div>
+              <label class="search-field admin-search">
+                <span class="search-field__icon" aria-hidden="true">🔎</span>
+                <input type="search" id="usersSearch" data-admin-placeholder="usersSearch" placeholder="Поиск по имени или email" />
+              </label>
+            </div>
+            <div class="admin-list" id="usersList"></div>
+          </article>
+
+          <article class="admin-section admin-section--products">
+            <div class="admin-section__head">
+              <div>
+                <p class="admin-section__eyebrow" data-admin-i18n="section5">Раздел 5</p>
+                <h2 data-admin-i18n="topProductsTitle">Популярные товары</h2>
+                <p class="section__subtitle" data-admin-i18n="topProductsLead">Что чаще всего попадает в оформленные заказы.</p>
+              </div>
+            </div>
+            <div class="admin-list" id="topProducts"></div>
+          </article>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <span class="logo__icon">🧸</span> <span data-admin-i18n="footerBrand">Игрушкино Admin</span>
+      </div>
+      <p class="footer__meta" data-admin-i18n="footerMeta">Админ-панель работает локально и синхронизирует изменения с витриной этого браузера.</p>
+    </div>
+  </footer>
+
+  <script src="js/store-data.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

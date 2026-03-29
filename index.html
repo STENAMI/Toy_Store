@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Игрушкино — магазин игрушек</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Unbounded:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+  </div>
+
+  <header class="header">
+    <div class="container header__inner">
+      <a href="#" class="logo">
+        <span class="logo__icon">🧸</span>
+        <span class="logo__text" data-i18n="brand">Игрушкино</span>
+      </a>
+
+      <nav class="nav" id="nav">
+        <a href="#catalog" data-i18n="navCatalog">Направления</a>
+        <a href="#popular" data-i18n="navPopular">Популярное</a>
+        <a href="#shop" data-i18n="navShop">Товары</a>
+        <a href="#support" data-i18n="navSupport">Поддержка</a>
+        <div class="nav__mobile-auth">
+          <button type="button" class="btn btn--ghost" data-auth-open="login" data-i18n="login">Войти</button>
+          <button type="button" class="btn btn--primary" data-auth-open="register" data-i18n="register">Регистрация</button>
+        </div>
+      </nav>
+
+      <div class="header__actions">
+        <div class="header-switchers">
+          <div class="header-switcher">
+            <span data-i18n="languageLabel">Язык</span>
+            <div class="segmented-switch" id="languageSwitch">
+              <button type="button" class="segmented-switch__option" data-language="ru">RU</button>
+              <button type="button" class="segmented-switch__option" data-language="en">EN</button>
+            </div>
+          </div>
+          <label class="header-switcher">
+            <span data-i18n="currencyLabel">Валюта</span>
+            <select id="currencySelect">
+              <option value="RUB">RUB</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </label>
+          <div class="header-switcher">
+            <span data-i18n="themeLabel">Тема</span>
+            <div class="segmented-switch" id="themeSwitch">
+              <button type="button" class="segmented-switch__option" data-theme-value="dark" data-i18n="themeDark">Тёмная</button>
+              <button type="button" class="segmented-switch__option" data-theme-value="light" data-i18n="themeLight">Светлая</button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn--cart" id="btnCart" aria-label="Корзина">
+          <span class="btn--cart__icon">🛒</span>
+          <span class="cart-badge is-zero" id="cartCount">0</span>
+        </button>
+        <button type="button" class="btn btn--outline hidden support-inbox-btn" id="btnSupportInbox" data-i18n="supportInbox">Обращения</button>
+        <div class="user-area" id="userArea">
+          <button type="button" class="btn btn--ghost" id="btnLogin" data-i18n="login">Войти</button>
+          <button type="button" class="btn btn--primary" id="btnRegister" data-i18n="register">Регистрация</button>
+        </div>
+        <div class="user-badge hidden" id="userBadge">
+          <span class="user-badge__name" id="userNameDisplay"></span>
+          <button type="button" class="btn btn--small btn--outline" id="btnLogout">Выйти</button>
+        </div>
+        <button type="button" class="burger" id="burger" aria-label="Меню">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__content">
+          <p class="eyebrow" data-i18n="heroBadge">Подарки с доставкой по всей России</p>
+          <h1 data-i18n="heroTitle">Игрушки, которые хочется не выпускать из рук</h1>
+          <p class="hero__lead" data-i18n="heroLead">Мягкие, развивающие и яркие игрушки с избранным, удобной историей просмотров и живыми карточками товаров.</p>
+          <div class="hero__cta">
+            <a href="#shop" class="btn btn--primary btn--lg" data-i18n="heroPrimary">Смотреть каталог</a>
+            <a href="#popular" class="btn btn--outline btn--lg" data-i18n="heroSecondary">Популярные товары</a>
+          </div>
+          <div class="hero__stats">
+            <div><strong>20</strong><span data-i18n="heroStatCatalog">товаров в каталоге</span></div>
+            <div><strong>3</strong><span data-i18n="heroStatLocale">валюты и 2 языка</span></div>
+            <div><strong>24/7</strong><span data-i18n="heroStatHistory">история и избранное</span></div>
+          </div>
+          <div class="delivery-banner">
+            <label class="field delivery-banner__field">
+              <span data-i18n="deliveryLabel">Адрес доставки</span>
+              <input id="deliveryAddressHeader" type="text" data-i18n-placeholder="addressPlaceholder" placeholder="Улица, дом, квартира" />
+            </label>
+          </div>
+        </div>
+
+        <div class="hero__visual">
+          <div class="hero__card hero__card--interactive">
+            <div class="hero__overlay"></div>
+            <button type="button" class="hero__nav hero__nav--prev" id="btnHeroPrev" aria-label="Назад">←</button>
+            <button type="button" class="hero__nav hero__nav--next" id="btnHeroNext" aria-label="Вперёд">→</button>
+            <div class="hero__badge" id="heroBadge">Игрушкино • 2026 • New</div>
+            <div class="hero__caption">
+              <h2 id="heroSlideTitle">Игрушкино Dream Dragon</h2>
+              <div class="hero__caption-actions">
+                <span class="hero__price-badge" id="heroPriceBadge">1 750 ₽</span>
+                <button type="button" class="hero__ghost-link" id="btnHeroOpen" data-i18n="heroOpen">Открыть карточку</button>
+              </div>
+            </div>
+            <div class="hero__layers">
+              <div class="hero__layer hero__layer--back"></div>
+              <img src="img/p15.svg" alt="Игрушкино" width="520" height="520" loading="eager" id="heroSlideImage" />
+              <div class="hero__layer hero__layer--front"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="catalog">
+      <div class="container">
+        <h2 class="section__title" data-i18n="navCatalog">Направления</h2>
+        <p class="section__subtitle" data-i18n="collectionsSubtitle">Плюшевые друзья, конструкторы, развивающие наборы и активные игрушки на каждый день.</p>
+        <div class="cards cards--4">
+          <article class="card">
+            <div class="card__emoji">🧸</div>
+            <h3 data-i18n="collectionPlushTitle">Мягкие игрушки</h3>
+            <p data-i18n="collectionPlushText">Уютные подарки для сна, дороги и личного маленького ритуала перед сном.</p>
+          </article>
+          <article class="card">
+            <div class="card__emoji">🧱</div>
+            <h3 data-i18n="collectionBuilderTitle">Конструкторы</h3>
+            <p data-i18n="collectionBuilderText">Наборы для фантазии, мелкой моторики и первых инженерных побед.</p>
+          </article>
+          <article class="card">
+            <div class="card__emoji">🎨</div>
+            <h3 data-i18n="collectionCreativeTitle">Творчество</h3>
+            <p data-i18n="collectionCreativeText">Лепка, рисунок и наборы, которые превращают стол в мастерскую.</p>
+          </article>
+          <article class="card">
+            <div class="card__emoji">🏃</div>
+            <h3 data-i18n="collectionOutdoorTitle">Активные игры</h3>
+            <p data-i18n="collectionOutdoorText">Игрушки для улицы, движения и энергичных семейных выходных.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--tint" id="popular">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 class="section__title section__title--left" data-i18n="popularTitle">Популярные товары</h2>
+            <p class="section__subtitle section__subtitle--left" data-i18n="popularSubtitle">Листайте карточки стрелками и открывайте подробное описание.</p>
+          </div>
+          <div class="carousel-controls">
+            <button type="button" class="carousel-btn" id="btnPopularPrev" aria-label="Назад">←</button>
+            <button type="button" class="carousel-btn" id="btnPopularNext" aria-label="Вперёд">→</button>
+          </div>
+        </div>
+        <div class="popular-strip" id="popularTrack"></div>
+      </div>
+    </section>
+
+    <section class="section" id="shop">
+      <div class="container">
+        <h2 class="section__title" data-i18n="shopTitle">Каталог товаров</h2>
+        <p class="section__subtitle" data-i18n="shopSubtitle">Фильтруйте по полу, цене, истории и избранному. Нажмите на товар, чтобы открыть подробную карточку.</p>
+
+        <div class="shop-toolbar shop-toolbar--extended">
+          <div class="search-stack">
+            <label class="search-field" for="shopSearch">
+              <span class="search-field__icon" aria-hidden="true">🔎</span>
+              <input type="search" id="shopSearch" data-i18n-placeholder="searchPlaceholder" placeholder="Поиск: мишка, конструктор, настолка…" autocomplete="off" />
+            </label>
+            <div class="search-history-popover hidden" id="searchHistoryPopover">
+              <div class="history-chips" id="searchHistoryList"></div>
+              <p class="shop-empty" id="searchHistoryEmpty">Последние запросы будут сохраняться здесь.</p>
+              <button type="button" class="btn btn--ghost hidden" id="btnClearSearchHistory">Очистить историю</button>
+            </div>
+          </div>
+          <label class="shop-select">
+            <span data-i18n="sortLabel">Сортировка</span>
+            <select id="sortSelect">
+              <option value="popular" data-i18n="sortPopular">Сначала популярные</option>
+              <option value="category" data-i18n="sortCategory">По категории</option>
+              <option value="price-asc" data-i18n="sortCheap">Сначала дешевле</option>
+              <option value="price-desc" data-i18n="sortExpensive">Сначала дороже</option>
+            </select>
+          </label>
+          <label class="shop-select">
+            <span data-i18n="audienceLabel">Подборка</span>
+            <select id="audienceSelect">
+              <option value="all" data-i18n="audienceAll">Все товары</option>
+              <option value="boys" data-i18n="boys">Для мальчиков</option>
+              <option value="girls" data-i18n="girls">Для девочек</option>
+              <option value="unisex" data-i18n="unisex">Универсальные</option>
+            </select>
+          </label>
+          <label class="toggle">
+            <input type="checkbox" id="favOnlyToggle" />
+            <span data-i18n="onlyFav">Только избранное</span>
+          </label>
+        </div>
+
+        <p class="shop-toolbar__hint" id="shopSearchHint" aria-live="polite"></p>
+        <div class="cards cards--shop" id="shopGrid"></div>
+        <p class="shop-empty hidden" id="shopEmpty" role="status">Ничего не найдено.</p>
+      </div>
+    </section>
+
+    <section class="section section--tint section--history">
+      <div class="container history-grid">
+        <article class="history-card">
+          <div class="section-head">
+            <h2 class="section__title section__title--left" data-i18n="favoritesTitle">Ваши любимые товары</h2>
+          </div>
+          <div class="popular-strip popular-strip--compact" id="favoritesGrid"></div>
+          <p class="shop-empty" id="favoritesEmpty">Добавьте товары в избранное, чтобы собрать личную подборку.</p>
+        </article>
+
+        <article class="history-card">
+          <div class="section-head">
+            <h2 class="section__title section__title--left" data-i18n="viewedTitle">Недавно смотрели</h2>
+          </div>
+          <div class="popular-strip popular-strip--compact" id="viewedGrid"></div>
+          <p class="shop-empty" id="viewedEmpty">История просмотров появится после открытия карточек товаров.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="support">
+      <div class="container support">
+        <div class="support__intro">
+          <h2 class="section__title" data-i18n="supportTitle">Поддержка</h2>
+          <p class="section__subtitle" data-i18n="supportSubtitle">Заказ, возврат, подарок, материалы и возрастные рекомендации. Мы ответим в чате и по email.</p>
+          <ul class="support__channels">
+            <li><span class="support__icon">✉️</span> <strong>hello@igrushkino.ru</strong> — <span data-i18n="supportChannelEmail">общие вопросы</span></li>
+            <li><span class="support__icon">📞</span> <strong>8 (800) 123-45-67</strong> — <span data-i18n="supportChannelPhone">звонок по РФ</span></li>
+            <li><span class="support__icon">💬</span> <span data-i18n="supportChannelChat">Чат на сайте — ежедневно 9:00–21:00</span></li>
+          </ul>
+          <div class="faq">
+            <details open>
+              <summary data-i18n="faqAgeTitle">Можно ли выбрать игрушку по возрасту?</summary>
+              <p data-i18n="faqAgeText">Да, в карточке каждого товара теперь есть возрастная категория и материал.</p>
+            </details>
+            <details>
+              <summary data-i18n="faqDeliveryTitle">Как работает доставка?</summary>
+              <p data-i18n="faqDeliveryText">Укажите город и адрес в корзине, и заказ сохранится в локальной истории заказов.</p>
+            </details>
+            <details>
+              <summary data-i18n="faqAnswersTitle">Где посмотреть ответы поддержки?</summary>
+              <p data-i18n="faqAnswersText">После входа откроется кнопка «Обращения» в шапке сайта.</p>
+            </details>
+          </div>
+        </div>
+        <div class="support__form-wrap">
+          <form class="form" id="supportForm" novalidate>
+            <h3>Написать в поддержку</h3>
+            <p class="support-login-note" id="supportLoginNote">Чтобы создать обращение и получить ответ в чате, войдите в аккаунт.</p>
+            <label class="field">
+              <span>Имя</span>
+              <input type="text" name="name" required placeholder="Как к вам обращаться" autocomplete="name" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input type="email" name="email" required placeholder="you@example.com" autocomplete="email" />
+            </label>
+            <label class="field">
+              <span>Тема</span>
+              <select name="topic">
+                <option value="order">Заказ и доставка</option>
+                <option value="return">Возврат и обмен</option>
+                <option value="product">Вопрос о товаре</option>
+                <option value="other">Другое</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Сообщение</span>
+              <textarea name="message" rows="4" required placeholder="Опишите ситуацию — приложите номер заказа, если он уже есть"></textarea>
+            </label>
+            <button type="submit" class="btn btn--primary btn--block" id="supportSubmitBtn">Отправить</button>
+            <p class="form__note" id="supportFormNote" role="status"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner footer__inner--wide">
+      <div class="footer__brand">
+        <span class="logo__icon">🧸</span>
+        <span data-i18n="footerBrand">Игрушкино © 2026</span>
+      </div>
+      <div class="footer__links">
+        <a href="admin.html" class="footer__link" data-i18n="footerAdmin">Админ-панель</a>
+        <a href="#shop" class="footer__link" data-i18n="footerNew">Новинки</a>
+        <a href="#popular" class="footer__link" data-i18n="footerPopular">Популярное</a>
+        <a href="mailto:job@igrushkino.ru" class="footer__link footer__link--accent" data-i18n="careers">Хочу устроиться в Игрушкино!</a>
+      </div>
+      <p class="footer__meta" data-i18n="footerMeta">Магазин сохраняет избранное, корзину, историю и товары только в браузере.</p>
+    </div>
+  </footer>
+
+  <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="cart-drawer__backdrop" data-cart-close></div>
+    <div class="cart-drawer__panel" role="dialog" aria-labelledby="cartTitle">
+      <button type="button" class="cart-drawer__close" data-cart-close aria-label="Закрыть">×</button>
+      <h2 id="cartTitle" class="cart-drawer__title" data-i18n="cartTitle">Корзина</h2>
+      <div class="cart-drawer__body" id="cartItems"></div>
+      <div class="checkout-fields">
+        <label class="field">
+          <span data-i18n="cityLabel">Город</span>
+          <input type="text" id="deliveryCity" placeholder="Красноярск" />
+        </label>
+        <label class="field">
+          <span data-i18n="orderAddress">Адрес доставки</span>
+          <input type="text" id="deliveryAddress" data-i18n-placeholder="addressPlaceholder" placeholder="Улица, дом, квартира" />
+        </label>
+      </div>
+      <div class="cart-drawer__footer">
+        <div class="cart-total">
+          <span data-i18n="total">Итого:</span>
+          <strong id="cartTotal">0 ₽</strong>
+        </div>
+        <button type="button" class="btn btn--primary btn--block" id="btnCheckout" data-i18n="checkout">Оформить заказ</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalOrder" aria-hidden="true" role="dialog" aria-labelledby="orderTitle">
+    <div class="modal__backdrop" data-close-order></div>
+    <div class="modal__panel modal__panel--wide">
+      <button type="button" class="modal__close" data-close-order aria-label="Закрыть">×</button>
+      <div class="order-success">
+        <div class="order-success__emoji">🎉</div>
+        <h2 id="orderTitle">Заказ принят</h2>
+        <p class="order-success__text">Номер заказа: <strong id="orderNumber">—</strong></p>
+        <p class="order-success__text">Сумма: <strong id="orderSum">0 ₽</strong></p>
+        <p class="order-success__text">Доставка: <strong id="orderAddressSummary">—</strong></p>
+        <p class="order-success__hint">Оплата в демо-версии не проводится. Заказ сохранён в локальной памяти браузера.</p>
+        <button type="button" class="btn btn--primary btn--block" data-close-order>Отлично</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="productModal" aria-hidden="true" role="dialog" aria-labelledby="productModalTitle">
+    <div class="modal__backdrop" data-close-product></div>
+    <div class="modal__panel modal__panel--product">
+      <button type="button" class="modal__close" data-close-product aria-label="Закрыть">×</button>
+      <div id="productModalBody"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalSupportInbox" aria-hidden="true" role="dialog" aria-labelledby="supportInboxTitle">
+    <div class="modal__backdrop" data-close-support></div>
+    <div class="modal__panel modal__panel--support">
+      <button type="button" class="modal__close" data-close-support aria-label="Закрыть">×</button>
+      <div class="support-chat">
+        <aside class="support-chat__sidebar">
+          <div class="support-chat__sidebar-head">
+            <div>
+              <h2 id="supportInboxTitle">Обращения</h2>
+              <p>Ваши диалоги с поддержкой</p>
+            </div>
+            <button type="button" class="btn btn--primary btn--small" id="btnNewSupportThread">Новое</button>
+          </div>
+          <div class="support-chat__threads" id="supportThreads"></div>
+        </aside>
+        <section class="support-chat__main">
+          <div class="support-chat__empty" id="supportThreadEmpty">
+            <h3>Пока пусто</h3>
+            <p>Создайте новое обращение или выберите существующий диалог слева.</p>
+          </div>
+
+          <div class="support-chat__new hidden" id="supportNewThreadFormWrap">
+            <div class="support-chat__thread-head">
+              <div>
+                <h3>Новое обращение</h3>
+                <p data-i18n="supportInstant">Сообщение сразу увидит администратор.</p>
+              </div>
+            </div>
+            <form class="support-chat__composer support-chat__composer--new" id="supportNewThreadForm">
+              <label class="field">
+                <span>Тема</span>
+                <select name="topic">
+                  <option value="order">Заказ и доставка</option>
+                  <option value="return">Возврат и обмен</option>
+                  <option value="product">Вопрос о товаре</option>
+                  <option value="other">Другое</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Сообщение</span>
+                <textarea name="message" rows="5" required placeholder="Напишите, что случилось или что хотите уточнить"></textarea>
+              </label>
+              <button type="submit" class="btn btn--primary">Создать обращение</button>
+            </form>
+          </div>
+
+          <div class="support-chat__thread hidden" id="supportThreadView">
+            <div class="support-chat__thread-head" id="supportThreadHeader"></div>
+            <div class="support-chat__messages" id="supportMessages"></div>
+            <form class="support-chat__composer" id="supportReplyForm">
+              <label class="field">
+                <span>Ответ</span>
+                <textarea id="supportComposer" name="message" rows="4" required placeholder="Напишите сообщение в чат"></textarea>
+              </label>
+              <div class="support-chat__composer-footer">
+                <p class="support-chat__hint" id="supportReplyHint" data-i18n="supportReplyHere">Ответ администратора появится здесь.</p>
+                <button type="submit" class="btn btn--primary">Отправить</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalAuth" aria-hidden="true" role="dialog" aria-labelledby="modalAuthTitle">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel">
+      <button type="button" class="modal__close" data-close aria-label="Закрыть">×</button>
+      <div class="tabs">
+        <button type="button" class="tabs__btn is-active" data-tab="login">Вход</button>
+        <button type="button" class="tabs__btn" data-tab="register">Регистрация</button>
+      </div>
+      <form class="form form--auth" id="formLogin" data-panel="login">
+        <h2 id="modalAuthTitle" class="sr-only">Вход</h2>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" required autocomplete="username" />
+        </label>
+        <label class="field">
+          <span>Пароль</span>
+          <input type="password" name="password" required minlength="6" autocomplete="current-password" />
+        </label>
+        <button type="submit" class="btn btn--primary btn--block">Войти</button>
+        <p class="form__error" id="loginError" role="alert"></p>
+      </form>
+      <form class="form form--auth hidden" id="formRegister" data-panel="register">
+        <label class="field">
+          <span>Имя</span>
+          <input type="text" name="name" required autocomplete="name" />
+        </label>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" required autocomplete="email" />
+        </label>
+        <label class="field">
+          <span>Пароль</span>
+          <input type="password" name="password" required minlength="6" autocomplete="new-password" />
+        </label>
+        <label class="field checkbox">
+          <input type="checkbox" name="agree" required />
+          <span>Согласен с условиями и политикой конфиденциальности</span>
+        </label>
+        <button type="submit" class="btn btn--primary btn--block">Создать аккаунт</button>
+        <p class="form__error" id="registerError" role="alert"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/store-data.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
