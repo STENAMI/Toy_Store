@@ -13,6 +13,7 @@
   const loginForm = document.getElementById("adminLoginForm");
   const loginError = document.getElementById("adminLoginError");
   const logoutBtn = document.getElementById("btnAdminLogout");
+  const homeLink = document.querySelector('a.logo[href="index.html"]');
 
   const statsGrid = document.getElementById("statsGrid");
   const ordersList = document.getElementById("ordersList");
@@ -36,6 +37,18 @@
 
   let activeSupportThreadId = null;
   let activeProductId = null;
+
+  function resolveBasePath() {
+    const path = window.location.pathname || "/";
+    if (path.endsWith("/")) return path;
+    if (path.endsWith(".html")) return path.replace(/[^/]*$/, "");
+    return `${path}/`;
+  }
+
+  function syncHomeLink() {
+    if (!homeLink) return;
+    homeLink.setAttribute("href", `${resolveBasePath()}index.html`);
+  }
 
   const statusLabels = {
     ru: { new: "Новый", processing: "В работе", done: "Завершён", cancelled: "Отменён" },
@@ -942,6 +955,7 @@
   }
 
   function init() {
+    syncHomeLink();
     setAuthState(isAdminLoggedIn());
     bindAdminSettings();
     if (isAdminLoggedIn()) renderAll();

@@ -14,6 +14,7 @@
   const burger = document.getElementById("burger");
   const nav = document.getElementById("nav");
   const btnSupportInbox = document.getElementById("btnSupportInbox");
+  const adminLink = document.querySelector('a[href="admin.html"]');
 
   const supportModal = document.getElementById("modalSupportInbox");
   const supportThreads = document.getElementById("supportThreads");
@@ -67,6 +68,18 @@
 
   function createId(prefix) {
     return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function resolveBasePath() {
+    const path = window.location.pathname || "/";
+    if (path.endsWith("/")) return path;
+    if (path.endsWith(".html")) return path.replace(/[^/]*$/, "");
+    return `${path}/`;
+  }
+
+  function syncAdminLink() {
+    if (!adminLink) return;
+    adminLink.setAttribute("href", `${resolveBasePath()}admin.html`);
   }
 
   function normalizeSupportThreads() {
@@ -591,6 +604,7 @@
     syncSupportInboxIfNeeded(true);
   });
 
+  syncAdminLink();
   syncSupportFormUser();
   startSupportAutoRefresh();
   window.addEventListener("beforeunload", stopSupportAutoRefresh);
