@@ -39,15 +39,6 @@
   let activeSupportThreadId = null;
   let activeProductId = null;
   let isEditingProduct = false;
-  let editingTimer = null;
-
-  function markEditingProduct() {
-    isEditingProduct = true;
-    if (editingTimer) window.clearTimeout(editingTimer);
-    editingTimer = window.setTimeout(() => {
-      isEditingProduct = false;
-    }, 4000);
-  }
 
   function resolveBasePath() {
     const path = window.location.pathname || "/";
@@ -805,11 +796,17 @@
       productEditor.innerHTML = `<div class="admin-empty admin-empty--thread">${escapeHtml(adminT("chooseProduct"))}</div>`;
       return;
     }
-    isEditingProduct = false;
     productEditor.innerHTML = `
       <form class="admin-product-form" id="adminProductForm">
         <div class="admin-product-form__hero">
           <img src="${escapeHtml(product.images?.[0] || product.image)}" alt="" />
+        <div class="admin-edit-lock">
+          <div>
+            <p class="admin-edit-lock__title">Редактирование выключено</p>
+            <p class="admin-edit-lock__text">Нажмите «Начать редактирование», чтобы внести изменения.</p>
+          </div>
+          <button type="button" class="btn btn--primary" id="btnStartEdit">Начать редактирование</button>
+        </div>
           <div>
             <h3>${escapeHtml(product.title)}</h3>
             <p>${escapeHtml(product.id)} · ${escapeHtml(trGender(product.gender))} · ${escapeHtml(product.category)}</p>
@@ -852,13 +849,33 @@
       </form>
     `;
     const form = document.getElementById("adminProductForm");
+    const startEditBtn = document.getElementById("btnStartEdit");
+    const editLock = form.querySelector(".admin-edit-lock");
+    const grid = form.querySelector(".admin-product-form__grid");
     const imagesField = form.querySelector('textarea[name="images"]');
     const uploadField = document.getElementById("adminImageUpload");
-    form.querySelectorAll("input, textarea, select").forEach((field) => {
-      field.addEventListener("input", markEditingProduct);
-      field.addEventListener("change", markEditingProduct);
-      field.addEventListener("focus", markEditingProduct);
-    });
+    const formFields = form.querySelectorAll("input, textarea, select, button");
+
+    if (editLock && grid) {
+      grid.before(editLock);
+      const title = editLock.querySelector(".admin-edit-lock__title");
+      const text = editLock.querySelector(".admin-edit-lock__text");
+      if (title) title.textContent = "Редактирование выключено";
+      if (text) text.textContent = "Нажмите «Начать редактирование», чтобы внести изменения.";
+    }
+
+    function setEditing(enabled) {
+      isEditingProduct = enabled;
+      if (editLock) editLock.classList.toggle("is-hidden", enabled);
+      formFields.forEach((field) => {
+        if (field === startEditBtn) return;
+        if (enabled) field.removeAttribute("disabled");
+        else field.setAttribute("disabled", "disabled");
+      });
+    }
+
+    setEditing(false);
+    startEditBtn?.addEventListener("click", () => setEditing(true));
     document.getElementById("btnMoveImageUp")?.addEventListener("click", () => reorderImages(imagesField, -1));
     document.getElementById("btnMoveImageDown")?.addEventListener("click", () => reorderImages(imagesField, 1));
     uploadField?.addEventListener("change", async () => {
@@ -881,6 +898,7 @@
     });
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!isEditingProduct) return;
       const data = new FormData(form);
       const images = String(data.get("images") || "")
         .split(/\r?\n/)
@@ -912,8 +930,8 @@
         }
         return isMainHero ? { ...item, mainHero: false } : item;
       });
-      isEditingProduct = false;
       saveProducts(next);
+      setEditing(false);
       renderProductList();
     });
   }
