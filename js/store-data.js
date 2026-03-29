@@ -6,6 +6,7 @@
     searchHistory: "igrushkino_search_history",
     settings: "igrushkino_settings",
   };
+  const PRODUCTS_UPDATED_KEY = "igrushkino_products_updated_at";
 
   const API_BASE = String(window.ToyStoreConfig?.apiBase || "").trim().replace(/\/$/, "");
   const API_ENABLED = API_BASE.length > 0;
@@ -429,22 +430,27 @@
     if (!API_ENABLED) return;
     const data = await apiFetch("/api/products");
     const products = Array.isArray(data) ? data : data?.products;
+    const remoteUpdatedAt = Number(data?.updatedAt || 0) || 0;
     if (!Array.isArray(products)) return;
+    const localUpdatedAt = Number(localStorage.getItem(PRODUCTS_UPDATED_KEY) || 0) || 0;
+    if (remoteUpdatedAt && localUpdatedAt && localUpdatedAt > remoteUpdatedAt) return;
     if (!products.length) {
       const current = readJSON(KEYS.products, null);
       const fallback = Array.isArray(current) && current.length ? current : buildDefaultProducts();
       writeJSON(KEYS.products, normalizeProducts(fallback));
-      saveProductsToApi(fallback);
+      localStorage.setItem(PRODUCTS_UPDATED_KEY, String(Date.now()));
+      saveProductsToApi(fallback, Date.now());
       window.dispatchEvent(new CustomEvent("toy-products-updated"));
       return;
     }
     writeJSON(KEYS.products, normalizeProducts(products));
+    if (remoteUpdatedAt) localStorage.setItem(PRODUCTS_UPDATED_KEY, String(remoteUpdatedAt));
     window.dispatchEvent(new CustomEvent("toy-products-updated"));
   }
 
-  function saveProductsToApi(products) {
+  function saveProductsToApi(products, updatedAt) {
     if (!API_ENABLED) return;
-    apiFetch("/api/products", { method: "PUT", body: { products: normalizeProducts(products) } });
+    apiFetch("/api/products", { method: "PUT", body: { products: normalizeProducts(products), updatedAt } });
   }
 
   function getProducts() {
@@ -458,9 +464,11 @@
   }
 
   function saveProducts(products) {
+    const updatedAt = Date.now();
     writeJSON(KEYS.products, normalizeProducts(products));
+    localStorage.setItem(PRODUCTS_UPDATED_KEY, String(updatedAt));
     window.dispatchEvent(new CustomEvent("toy-products-updated"));
-    saveProductsToApi(products);
+    saveProductsToApi(products, updatedAt);
   }
 
   function getSettings() {
@@ -709,6 +717,11 @@
       searchHistoryClear: "Clear history",
     },
   };
+
+  dictionary.ru.categoryLabel = "РљР°С‚РµРіРѕСЂРёСЏ";
+  dictionary.ru.categoryAll = "Р’СЃРµ РєР°С‚РµРіРѕСЂРёРё";
+  dictionary.en.categoryLabel = "Category";
+  dictionary.en.categoryAll = "All categories";
 
   function t(key, replacements, language) {
     const lang = language || getSettings().language || "ru";

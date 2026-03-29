@@ -1,5 +1,6 @@
 (function () {
   const STORAGE_KEY = "igrushkino_user";
+  const api = window.ToyStoreApi;
 
   async function hashPassword(password) {
     const value = String(password || "");
@@ -66,6 +67,31 @@
     async register(name, email, password) {
       const users = getUsers();
       const key = email.trim().toLowerCase();
+      if (api?.enabled) {
+        const data = await api.fetch("/api/users/login", {
+          method: "POST",
+          body: { email: key, passwordHash },
+        });
+        if (data?.user) {
+          users[key] = { ...data.user, passwordHash };
+          saveUsers(users);
+          saveUser({ name: data.user.name, email: data.user.email });
+          return { ok: true };
+        }
+      }
+      const passwordHash = await hashPassword(password);
+      if (api?.enabled) {
+        const data = await api.fetch("/api/users/register", {
+          method: "POST",
+          body: { name: name.trim(), email: key, passwordHash },
+        });
+        if (data?.user) {
+          users[key] = { ...data.user, passwordHash };
+          saveUsers(users);
+          saveUser({ name: data.user.name, email: data.user.email });
+          return { ok: true };
+        }
+      }
       if (users[key]) {
         return { ok: false, error: "Этот email уже зарегистрирован." };
       }
@@ -73,7 +99,7 @@
       users[key] = {
         name: name.trim(),
         email: key,
-        passwordHash: await hashPassword(password),
+        passwordHash,
         createdAt: Date.now(),
       };
       saveUsers(users);

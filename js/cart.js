@@ -1,8 +1,12 @@
 (function () {
   const CART_KEY = "igrushkino_cart";
+  const CART_UPDATED_KEY = "igrushkino_cart_updated_at";
+  const FAVORITES_UPDATED_KEY = "igrushkino_favorites_updated_at";
+  const VIEWED_UPDATED_KEY = "igrushkino_viewed_updated_at";
   const ORDERS_KEY = "igrushkino_orders";
   const { getProducts, getSettings, saveSettings, getFavorites, setFavorites, getViewed, setViewed, getSearchHistory, setSearchHistory, t, applyI18n } =
     window.ToyStoreData;
+  const api = window.ToyStoreApi;
 
   const EXCHANGE = { RUB: 1, USD: 0.011, EUR: 0.01 };
   const LOCALES = { ru: "ru-RU", en: "en-US" };
@@ -13,6 +17,7 @@
       search: "",
       sort: "popular",
       audience: "all",
+      category: "all",
       favoritesOnly: false,
     },
     popularIndex: 0,
@@ -59,6 +64,34 @@
     return getSettings().currency || "RUB";
   }
 
+  function getCategoryOptions() {
+    const categories = Array.from(
+      new Set(
+        currentProducts()
+          .map((product) => String(product.category || "toys").trim())
+          .filter(Boolean)
+      )
+    );
+    const labels = categoryLabels[getLocale()] || {};
+    return categories.sort((a, b) => String(labels[a] || a).localeCompare(String(labels[b] || b), getLocale()));
+  }
+
+  function renderCategoryOptions() {
+    const select = document.getElementById("categorySelect");
+    if (!select) return;
+    const current = state.filters.category || "all";
+    const options = ["all", ...getCategoryOptions()];
+    const labels = categoryLabels[getLocale()] || {};
+    select.innerHTML = options
+      .map((value) => {
+        const label = value === "all" ? t("categoryAll") : labels[value] || value;
+        return `<option value="${value}">${label}</option>`;
+      })
+      .join("");
+    select.value = options.includes(current) ? current : "all";
+    state.filters.category = select.value;
+  }
+
   function currentProducts() {
     state.products = getProducts();
     return state.products;
@@ -73,8 +106,117 @@
     }
   }
 
+  function getCurrentUser() {
+    return window.ToyStoreAuth?.getUser?.() || null;
+  }
+
+  function getUpdated(key) {
+    return Number(localStorage.getItem(key) || 0) || 0;
+  }
+
+  function setUpdated(key, value) {
+    localStorage.setItem(key, String(value || Date.now()));
+  }
+
+  let syncStatusTimer = null;
+
+  function ensureSyncStatus() {
+    let node = document.getElementById("syncStatus");
+    if (!node) {
+      node = document.createElement("div");
+      node.id = "syncStatus";
+      node.className = "sync-status";
+      document.body.appendChild(node);
+    }
+    return node;
+  }
+
+  function showSyncStatus(message, variant) {
+    const node = ensureSyncStatus();
+    node.textContent = message;
+    node.classList.remove("is-warning", "is-success");
+    if (variant) node.classList.add(variant);
+    node.classList.add("is-visible");
+    if (syncStatusTimer) window.clearTimeout(syncStatusTimer);
+    syncStatusTimer = window.setTimeout(() => {
+      node.classList.remove("is-visible");
+    }, 4200);
+  }
+
+  async function pushUserDataToApi() {
+    if (!api?.enabled) return;
+    const user = getCurrentUser();
+    if (!user?.email) return;
+    const result = await api.fetch(`/api/user-data/${encodeURIComponent(user.email)}`, {
+      method: "PUT",
+      body: {
+        cart: getCart(),
+        favorites: getFavorites(),
+        viewed: getViewed(),
+        cartUpdatedAt: getUpdated(CART_UPDATED_KEY),
+        favoritesUpdatedAt: getUpdated(FAVORITES_UPDATED_KEY),
+        viewedUpdatedAt: getUpdated(VIEWED_UPDATED_KEY),
+      },
+    });
+    if (!result) {
+      showSyncStatus("Синхронизация временно недоступна. Данные сохранены локально.", "is-warning");
+    }
+  }
+
+  async function syncUserDataFromApi() {
+    if (!api?.enabled) return;
+    const user = getCurrentUser();
+    if (!user?.email) return;
+    const data = await api.fetch(`/api/user-data/${encodeURIComponent(user.email)}`);
+    if (!data) {
+      showSyncStatus("Не удалось синхронизировать данные. Проверьте соединение.", "is-warning");
+      return;
+    }
+    const payload = data?.data;
+    if (!payload) {
+      if (getCart().length || getFavorites().length) {
+        setUpdated(CART_UPDATED_KEY, getUpdated(CART_UPDATED_KEY) || Date.now());
+        setUpdated(FAVORITES_UPDATED_KEY, getUpdated(FAVORITES_UPDATED_KEY) || Date.now());
+        setUpdated(VIEWED_UPDATED_KEY, getUpdated(VIEWED_UPDATED_KEY) || Date.now());
+        await pushUserDataToApi();
+      }
+      return;
+    }
+
+    const remoteCartUpdated = Number(payload.cartUpdatedAt || 0) || 0;
+    const remoteFavUpdated = Number(payload.favoritesUpdatedAt || 0) || 0;
+    const remoteViewedUpdated = Number(payload.viewedUpdatedAt || 0) || 0;
+    const localCartUpdated = getUpdated(CART_UPDATED_KEY);
+    const localFavUpdated = getUpdated(FAVORITES_UPDATED_KEY);
+    const localViewedUpdated = getUpdated(VIEWED_UPDATED_KEY);
+
+    if (Array.isArray(payload.cart) && remoteCartUpdated >= localCartUpdated) {
+      localStorage.setItem(CART_KEY, JSON.stringify(payload.cart));
+      setUpdated(CART_UPDATED_KEY, remoteCartUpdated || Date.now());
+    } else if (localCartUpdated > remoteCartUpdated) {
+      await pushUserDataToApi();
+    }
+
+    if (Array.isArray(payload.favorites) && remoteFavUpdated >= localFavUpdated) {
+      localStorage.setItem(window.ToyStoreData.KEYS.favorites, JSON.stringify(payload.favorites));
+      setUpdated(FAVORITES_UPDATED_KEY, remoteFavUpdated || Date.now());
+      window.dispatchEvent(new CustomEvent("toy-favorites-updated"));
+    } else if (localFavUpdated > remoteFavUpdated) {
+      await pushUserDataToApi();
+    }
+
+    if (Array.isArray(payload.viewed) && remoteViewedUpdated >= localViewedUpdated) {
+      localStorage.setItem(window.ToyStoreData.KEYS.viewed, JSON.stringify(payload.viewed));
+      setUpdated(VIEWED_UPDATED_KEY, remoteViewedUpdated || Date.now());
+    } else if (localViewedUpdated > remoteViewedUpdated) {
+      await pushUserDataToApi();
+    }
+  }
+
   function saveCart(items) {
     localStorage.setItem(CART_KEY, JSON.stringify(items));
+    setUpdated(CART_UPDATED_KEY, Date.now());
+    pushUserDataToApi();
     window.dispatchEvent(new CustomEvent("toy-cart-updated"));
   }
 
@@ -141,12 +283,16 @@
     if (favorites.has(id)) favorites.delete(id);
     else favorites.add(id);
     setFavorites(Array.from(favorites));
+    setUpdated(FAVORITES_UPDATED_KEY, Date.now());
+    pushUserDataToApi();
   }
 
   function addViewed(id) {
     const list = getViewed().filter((item) => item !== id);
     list.unshift(id);
     setViewed(list);
+    setUpdated(VIEWED_UPDATED_KEY, Date.now());
+    pushUserDataToApi();
   }
 
   function rememberSearch(query) {
@@ -171,8 +317,9 @@
         state.filters.audience === "all" ||
         product.gender === state.filters.audience ||
         (state.filters.audience === "unisex" && product.gender === "unisex");
+      const matchesCategory = state.filters.category === "all" || product.category === state.filters.category;
       const matchesFavorite = !state.filters.favoritesOnly || favorites.has(product.id);
-      return matchesSearch && matchesAudience && matchesFavorite && localized;
+      return matchesSearch && matchesAudience && matchesCategory && matchesFavorite && localized;
     });
 
     if (state.filters.sort === "category") {
@@ -508,7 +655,7 @@
     document.body.style.overflow = "";
   }
 
-  function checkout() {
+  async function checkout() {
     const cart = getCart();
     if (!cart.length) return openCart();
     const city = document.getElementById("deliveryCity")?.value.trim() || "";
@@ -526,7 +673,7 @@
       orders = [];
     }
     const orderId = `IG-${Date.now().toString(36).toUpperCase().slice(-8)}`;
-    orders.push({
+    const order = {
       id: orderId,
       items: cart.map((line) => ({ ...line })),
       total,
@@ -534,8 +681,12 @@
       deliveryAddress: address,
       at: new Date().toISOString(),
       status: "new",
-    });
+    };
+    orders.push(order);
     localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+    if (api?.enabled) {
+      api.fetch("/api/orders", { method: "POST", body: { order } });
+    }
     saveCart([]);
     renderCart();
     updateBadge();
@@ -592,6 +743,7 @@
     document.getElementById("deliveryAddress").value = settings.deliveryAddress || "";
     document.getElementById("deliveryCity").value = settings.city || "";
     applyI18n(document, settings.language);
+    renderCategoryOptions();
     const title = document.querySelector("title");
     if (title) title.textContent = settings.language === "en" ? "Igrushkino — Toy Store" : "Игрушкино — магазин игрушек";
   }
@@ -708,6 +860,10 @@
       state.filters.audience = event.target.value;
       renderShop();
     });
+    document.getElementById("categorySelect")?.addEventListener("change", (event) => {
+      state.filters.category = event.target.value;
+      renderShop();
+    });
     document.getElementById("favOnlyToggle")?.addEventListener("change", (event) => {
       state.filters.favoritesOnly = event.target.checked;
       renderShop();
@@ -769,6 +925,7 @@
     initControls();
     initHeroParallax();
     renderHeroSlide();
+    syncUserDataFromApi();
 
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
@@ -780,6 +937,7 @@
     window.addEventListener("toy-products-updated", () => {
       currentProducts();
       syncCartWithProducts();
+      renderCategoryOptions();
       renderAllCatalogPieces();
       renderCart();
     });
@@ -790,10 +948,16 @@
       renderCart();
       renderHeroSlide();
     });
+    window.addEventListener("toy-auth-updated", () => {
+      syncUserDataFromApi();
+      renderAllCatalogPieces();
+      renderCart();
+    });
     window.addEventListener("storage", (event) => {
       if ([CART_KEY, window.ToyStoreData.KEYS.products, window.ToyStoreData.KEYS.settings].includes(event.key)) {
         currentProducts();
         applySettingsToUI();
+        renderCategoryOptions();
         renderAllCatalogPieces();
         renderCart();
       }

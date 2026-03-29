@@ -271,6 +271,10 @@
     },
   };
 
+  adminI18n.ru.footerMeta =
+    "РђРґРјРёРЅ-РїР°РЅРµР»СЊ СЃРёРЅС…СЂРѕРЅРёР·РёСЂСѓРµС‚ РёР·РјРµРЅРµРЅРёСЏ СЃ СЃРµСЂРІРµСЂРѕРј Рё СЂР°СЃСЃС‹Р»Р°РµС‚ РёС… РЅР° РІСЃРµ СѓСЃС‚СЂРѕР№СЃС‚РІР°.";
+  adminI18n.en.footerMeta = "The admin panel syncs changes with the server and updates every device.";
+
   function adminT(key) {
     const lang = getSettings().language || "ru";
     return adminI18n[lang]?.[key] || adminI18n.ru[key] || key;
@@ -301,6 +305,15 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
+  async function syncOrdersFromApi() {
+    if (!api?.enabled) return null;
+    const data = await api.fetch("/api/orders");
+    const orders = Array.isArray(data) ? data : data?.orders;
+    if (!Array.isArray(orders)) return null;
+    writeArray(ORDERS_KEY, orders);
+    return orders;
+  }
+
   function readUsers() {
     try {
       const value = JSON.parse(localStorage.getItem(USERS_KEY) || "{}");
@@ -312,6 +325,19 @@
 
   function writeUsers(value) {
     localStorage.setItem(USERS_KEY, JSON.stringify(value));
+  }
+
+  async function syncUsersFromApi() {
+    if (!api?.enabled) return null;
+    const data = await api.fetch("/api/users");
+    const users = Array.isArray(data) ? data : data?.users;
+    if (!Array.isArray(users)) return null;
+    const map = users.reduce((acc, user) => {
+      if (user?.email) acc[user.email] = user;
+      return acc;
+    }, {});
+    writeUsers(map);
+    return users;
   }
 
   async function sha256(value) {
@@ -519,6 +545,9 @@
         const orderId = select.closest("[data-order-id]")?.getAttribute("data-order-id");
         if (!orderId) return;
         saveOrders(getOrders().map((order) => (order.id === orderId ? { ...order, status: select.value } : order)));
+        if (api?.enabled) {
+          api.fetch(`/api/orders/${encodeURIComponent(orderId)}`, { method: "PATCH", body: { status: select.value } });
+        }
         renderAll();
       });
     });
@@ -527,6 +556,9 @@
         const orderId = button.closest("[data-order-id]")?.getAttribute("data-order-id");
         if (!orderId) return;
         saveOrders(getOrders().filter((order) => order.id !== orderId));
+        if (api?.enabled) {
+          api.fetch(`/api/orders/${encodeURIComponent(orderId)}`, { method: "DELETE" });
+        }
         renderAll();
       });
     });
@@ -686,6 +718,9 @@
       button.addEventListener("click", () => {
         const email = button.closest("[data-user-email]")?.getAttribute("data-user-email");
         if (!email) return;
+        if (api?.enabled) {
+          api.fetch(`/api/users/${encodeURIComponent(email)}`, { method: "DELETE" });
+        }
         const usersMap = readUsers();
         delete usersMap[email];
         writeUsers(usersMap);
@@ -948,6 +983,8 @@
   async function renderAll() {
     if (api?.enabled) {
       await fetchSupportThreadsFromApi();
+      await syncUsersFromApi();
+      await syncOrdersFromApi();
     }
     const orders = getOrders();
     const users = getUsersList();

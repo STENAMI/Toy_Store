@@ -38,6 +38,11 @@
   let supportSyncTimer = null;
   let lastSupportSnapshot = localStorage.getItem(SUPPORT_KEY) || "[]";
 
+  if (supportLoginNote) {
+    supportLoginNote.textContent =
+      "Чтобы написать в поддержку, зарегистрируйтесь или войдите в аккаунт.";
+  }
+
   function openAuthModal(tab) {
     if (!modalAuth) return;
     modalAuth.classList.add("is-open");
