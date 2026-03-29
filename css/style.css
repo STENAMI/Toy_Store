@@ -2222,6 +2222,8 @@ html[data-theme="dark"] .carousel-btn:hover {
   gap: 1rem;
   overflow: auto;
   scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 0px;
   padding-bottom: 0.5rem;
 }
 
@@ -2236,6 +2238,10 @@ html[data-theme="dark"] .carousel-btn:hover {
 
 .popular-strip--compact {
   grid-auto-columns: minmax(220px, 280px);
+}
+
+.popular-strip .product {
+  scroll-snap-align: start;
 }
 
 .shop-toolbar--extended {
