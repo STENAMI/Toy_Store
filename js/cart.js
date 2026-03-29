@@ -56,6 +56,18 @@
     },
   };
 
+  categoryLabels.ru = {
+    plush: "\u041c\u044f\u0433\u043a\u0438\u0435 \u0438\u0433\u0440\u0443\u0448\u043a\u0438",
+    builder: "\u041a\u043e\u043d\u0441\u0442\u0440\u0443\u043a\u0442\u043e\u0440\u044b",
+    dolls: "\u041a\u0443\u043a\u043b\u044b",
+    board: "\u041d\u0430\u0441\u0442\u043e\u043b\u044c\u043d\u044b\u0435 \u0438\u0433\u0440\u044b",
+    transport: "\u0422\u0440\u0430\u043d\u0441\u043f\u043e\u0440\u0442",
+    science: "\u041d\u0430\u0443\u043a\u0430",
+    creative: "\u0422\u0432\u043e\u0440\u0447\u0435\u0441\u0442\u0432\u043e",
+    outdoor: "\u0410\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u0438\u0433\u0440\u044b",
+    toys: "\u0418\u0433\u0440\u0443\u0448\u043a\u0438",
+  };
+
   function getLocale() {
     return getSettings().language || "ru";
   }
@@ -399,7 +411,33 @@
       .sort((a, b) => b.popularScore - a.popularScore);
     viewport.innerHTML = popular.map((product) => productCardMarkup(product, true)).join("");
     bindProductActions(viewport);
+    bindPopularScroll(viewport);
     updatePopularPosition();
+  }
+
+  function bindPopularScroll(track) {
+    if (!track || track.dataset.popularBound === "true") return;
+    track.dataset.popularBound = "true";
+    let raf = null;
+    track.addEventListener("scroll", () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const cards = Array.from(track.querySelectorAll(".product"));
+        if (!cards.length) return;
+        const center = track.scrollLeft + track.clientWidth / 2;
+        let nextIndex = 0;
+        let best = Infinity;
+        cards.forEach((card, index) => {
+          const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+          const distance = Math.abs(cardCenter - center);
+          if (distance < best) {
+            best = distance;
+            nextIndex = index;
+          }
+        });
+        state.popularIndex = nextIndex;
+      });
+    });
   }
 
   function updatePopularPosition() {
@@ -408,9 +446,20 @@
     const cards = track.querySelectorAll(".product");
     const maxIndex = Math.max(0, cards.length - 1);
     state.popularIndex = Math.max(0, Math.min(state.popularIndex, maxIndex));
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    if (state.popularIndex <= 0) {
+      track.scrollTo({ left: 0, behavior: "smooth" });
+      return;
+    }
+    if (state.popularIndex >= maxIndex) {
+      track.scrollTo({ left: maxScroll, behavior: "smooth" });
+      return;
+    }
     const active = cards[state.popularIndex];
     if (!active) return;
-    const targetLeft = Math.max(0, active.offsetLeft - 8);
+    const styles = window.getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const targetLeft = Math.min(maxScroll, Math.max(0, active.offsetLeft - gap));
     track.scrollTo({ left: targetLeft, behavior: "smooth" });
   }
 
