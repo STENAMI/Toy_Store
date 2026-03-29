@@ -1,0 +1,3 @@
+window.ToyStoreConfig = {
+  apiBase: "",
+};

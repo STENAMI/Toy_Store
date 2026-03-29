@@ -15,6 +15,7 @@
   const nav = document.getElementById("nav");
   const btnSupportInbox = document.getElementById("btnSupportInbox");
   const adminLink = document.querySelector('a[href="admin.html"]');
+  const api = window.ToyStoreApi;
 
   const supportModal = document.getElementById("modalSupportInbox");
   const supportThreads = document.getElementById("supportThreads");
@@ -80,6 +81,29 @@
   function syncAdminLink() {
     if (!adminLink) return;
     adminLink.setAttribute("href", `${resolveBasePath()}admin.html`);
+  }
+
+  async function fetchSupportThreadsFromApi() {
+    if (!api?.enabled) return null;
+    const data = await api.fetch("/api/support/threads");
+    const threads = Array.isArray(data) ? data : data?.threads;
+    if (!Array.isArray(threads)) return null;
+    saveSupportThreads(threads);
+    lastSupportSnapshot = JSON.stringify(threads);
+    return threads;
+  }
+
+  function upsertThreadLocal(thread) {
+    const threads = normalizeSupportThreads();
+    const index = threads.findIndex((item) => item.id === thread.id);
+    if (index >= 0) threads[index] = thread;
+    else threads.push(thread);
+    saveSupportThreads(threads);
+  }
+
+  function patchThreadApi(threadId, payload) {
+    if (!api?.enabled) return;
+    api.fetch(`/api/support/threads/${threadId}`, { method: "PATCH", body: payload });
   }
 
   function normalizeSupportThreads() {
@@ -192,7 +216,7 @@
     }
   }
 
-  function openSupportModal() {
+  async function openSupportModal() {
     const user = getCurrentUser();
     if (!user) {
       openAuthModal("login");
@@ -201,6 +225,7 @@
     supportModal?.classList.add("is-open");
     supportModal?.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    await fetchSupportThreadsFromApi();
     renderSupportInbox();
   }
 
@@ -250,7 +275,10 @@
       changed = true;
       return { ...thread, unreadUser: 0 };
     });
-    if (changed) saveSupportThreads(next);
+    if (changed) {
+      saveSupportThreads(next);
+      patchThreadApi(threadId, { unreadUser: 0 });
+    }
   }
 
   function renderSupportThreadsList() {
@@ -344,9 +372,19 @@
     lastSupportSnapshot = localStorage.getItem(SUPPORT_KEY) || "[]";
   }
 
-  function addSupportThread({ topic, message, name, email }) {
+  async function addSupportThread({ topic, message, name, email }) {
     const text = String(message || "").trim();
     if (!text) return null;
+    if (api?.enabled) {
+      const data = await api.fetch("/api/support/threads", {
+        method: "POST",
+        body: { topic, message: text, name, email },
+      });
+      if (data?.thread) {
+        upsertThreadLocal(data.thread);
+        return data.thread;
+      }
+    }
     const now = new Date().toISOString();
     const thread = {
       id: createId("thread"),
@@ -374,11 +412,21 @@
     return thread;
   }
 
-  function appendUserReply(threadId, messageText) {
+  async function appendUserReply(threadId, messageText) {
     const text = String(messageText || "").trim();
     if (!text) return;
     const now = new Date().toISOString();
     const user = getCurrentUser();
+    if (api?.enabled) {
+      const data = await api.fetch(`/api/support/threads/${threadId}/replies`, {
+        method: "POST",
+        body: { authorType: "user", authorName: user?.name || "", text },
+      });
+      if (data?.thread) {
+        upsertThreadLocal(data.thread);
+        return;
+      }
+    }
     const threads = normalizeSupportThreads().map((thread) => {
       if (thread.id !== threadId) return thread;
       return {
@@ -401,7 +449,12 @@
     saveSupportThreads(threads);
   }
 
-  function syncSupportInboxIfNeeded(force) {
+  async function syncSupportInboxIfNeeded(force) {
+    if (api?.enabled) {
+      await fetchSupportThreadsFromApi();
+      if (getCurrentUser()) renderSupportInbox();
+      return;
+    }
     const nextSnapshot = localStorage.getItem(SUPPORT_KEY) || "[]";
     if (!force && nextSnapshot === lastSupportSnapshot) return;
     lastSupportSnapshot = nextSnapshot;
@@ -508,7 +561,7 @@
     }
   });
 
-  supportForm?.addEventListener("submit", (event) => {
+  supportForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!supportFormNote) return;
     const user = getCurrentUser();
@@ -519,7 +572,7 @@
       return;
     }
     const formData = new FormData(supportForm);
-    const thread = addSupportThread({
+    const thread = await addSupportThread({
       topic: String(formData.get("topic") || "other"),
       message: String(formData.get("message") || ""),
       name: user.name || String(formData.get("name") || ""),
@@ -545,7 +598,7 @@
     }, 6000);
   });
 
-  supportNewThreadForm?.addEventListener("submit", (event) => {
+  supportNewThreadForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const user = getCurrentUser();
     if (!user) {
@@ -554,7 +607,7 @@
       return;
     }
     const formData = new FormData(supportNewThreadForm);
-    const thread = addSupportThread({
+    const thread = await addSupportThread({
       topic: String(formData.get("topic") || "other"),
       message: String(formData.get("message") || ""),
       name: user.name,
@@ -566,10 +619,10 @@
     renderSupportInbox();
   });
 
-  supportReplyForm?.addEventListener("submit", (event) => {
+  supportReplyForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!activeThreadId) return;
-    appendUserReply(activeThreadId, supportComposer?.value);
+    await appendUserReply(activeThreadId, supportComposer?.value);
     supportReplyForm.reset();
     renderSupportInbox();
   });
@@ -582,10 +635,13 @@
     link.addEventListener("click", () => nav.classList.remove("is-open"));
   });
 
-  window.addEventListener("toy-auth-updated", () => {
+  window.addEventListener("toy-auth-updated", async () => {
     if (!getCurrentUser() && supportModal?.classList.contains("is-open")) {
       closeSupportModal();
       return;
+    }
+    if (api?.enabled) {
+      await fetchSupportThreadsFromApi();
     }
     syncSupportFormUser();
     if (getCurrentUser()) {

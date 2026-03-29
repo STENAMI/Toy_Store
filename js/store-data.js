@@ -7,6 +7,35 @@
     settings: "igrushkino_settings",
   };
 
+  const API_BASE = String(window.ToyStoreConfig?.apiBase || "").trim().replace(/\/$/, "");
+  const API_ENABLED = API_BASE.length > 0;
+
+  async function apiFetch(path, options) {
+    if (!API_ENABLED) return null;
+    const opts = options ? { ...options } : {};
+    const headers = { Accept: "application/json", ...(opts.headers || {}) };
+    if (opts.body && !headers["Content-Type"]) headers["Content-Type"] = "application/json";
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...opts,
+      headers,
+      body: typeof opts.body === "string" ? opts.body : opts.body ? JSON.stringify(opts.body) : undefined,
+    });
+    if (!response.ok) return null;
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  if (!window.ToyStoreApi) {
+    window.ToyStoreApi = { enabled: API_ENABLED, fetch: apiFetch, base: API_BASE };
+  } else {
+    window.ToyStoreApi.enabled = API_ENABLED;
+    window.ToyStoreApi.fetch = apiFetch;
+    window.ToyStoreApi.base = API_BASE;
+  }
+
   function readJSON(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
@@ -396,6 +425,28 @@
     return source.map((product, index) => enrichProduct(product, index));
   }
 
+  async function syncProductsFromApi() {
+    if (!API_ENABLED) return;
+    const data = await apiFetch("/api/products");
+    const products = Array.isArray(data) ? data : data?.products;
+    if (!Array.isArray(products)) return;
+    if (!products.length) {
+      const current = readJSON(KEYS.products, null);
+      const fallback = Array.isArray(current) && current.length ? current : buildDefaultProducts();
+      writeJSON(KEYS.products, normalizeProducts(fallback));
+      saveProductsToApi(fallback);
+      window.dispatchEvent(new CustomEvent("toy-products-updated"));
+      return;
+    }
+    writeJSON(KEYS.products, normalizeProducts(products));
+    window.dispatchEvent(new CustomEvent("toy-products-updated"));
+  }
+
+  function saveProductsToApi(products) {
+    if (!API_ENABLED) return;
+    apiFetch("/api/products", { method: "PUT", body: { products: normalizeProducts(products) } });
+  }
+
   function getProducts() {
     const stored = readJSON(KEYS.products, null);
     if (!stored || !Array.isArray(stored) || !stored.length) {
@@ -409,6 +460,7 @@
   function saveProducts(products) {
     writeJSON(KEYS.products, normalizeProducts(products));
     window.dispatchEvent(new CustomEvent("toy-products-updated"));
+    saveProductsToApi(products);
   }
 
   function getSettings() {
@@ -679,6 +731,10 @@
     (root || document).querySelectorAll("[data-i18n-aria]").forEach((node) => {
       node.setAttribute("aria-label", t(node.getAttribute("data-i18n-aria"), {}, lang));
     });
+  }
+
+  if (API_ENABLED) {
+    syncProductsFromApi();
   }
 
   window.ToyStoreData = {

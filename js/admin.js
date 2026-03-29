@@ -7,6 +7,7 @@
   const ADMIN_HASH = "3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121";
   const ADMIN_EMAIL = "admin@igrushkino.ru";
   const { getProducts, saveProducts, getSettings, saveSettings, t, applyI18n } = window.ToyStoreData;
+  const api = window.ToyStoreApi;
 
   const loginSection = document.getElementById("adminLoginSection");
   const dashboard = document.getElementById("adminDashboard");
@@ -392,6 +393,28 @@
     localStorage.setItem(SUPPORT_KEY, JSON.stringify(threads));
   }
 
+  async function fetchSupportThreadsFromApi() {
+    if (!api?.enabled) return null;
+    const data = await api.fetch("/api/support/threads");
+    const threads = Array.isArray(data) ? data : data?.threads;
+    if (!Array.isArray(threads)) return null;
+    saveSupportThreads(threads);
+    return threads;
+  }
+
+  function upsertThreadLocal(thread) {
+    const threads = normalizeSupportThreads();
+    const index = threads.findIndex((item) => item.id === thread.id);
+    if (index >= 0) threads[index] = thread;
+    else threads.push(thread);
+    saveSupportThreads(threads);
+  }
+
+  function patchThreadApi(threadId, payload) {
+    if (!api?.enabled) return;
+    api.fetch(`/api/support/threads/${threadId}`, { method: "PATCH", body: payload });
+  }
+
   function getOrders() {
     return readArray(ORDERS_KEY).sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0));
   }
@@ -512,6 +535,7 @@
   function markThreadReadForAdmin(threadId) {
     const next = normalizeSupportThreads().map((thread) => (thread.id === threadId ? { ...thread, unreadAdmin: 0 } : thread));
     saveSupportThreads(next);
+    patchThreadApi(threadId, { unreadAdmin: 0 });
   }
 
   function renderSupportThread(thread) {
@@ -553,11 +577,13 @@
         ? adminT("supportDoneHint")
         : adminT("supportOpenHint");
     document.getElementById("adminThreadStatus")?.addEventListener("change", (event) => {
+      const nextStatus = event.target.value;
       saveSupportThreads(
         normalizeSupportThreads().map((item) =>
-          item.id === thread.id ? { ...item, status: event.target.value, updatedAt: new Date().toISOString() } : item
+          item.id === thread.id ? { ...item, status: nextStatus, updatedAt: new Date().toISOString() } : item
         )
       );
+      patchThreadApi(thread.id, { status: nextStatus });
       renderAll();
     });
   }
@@ -602,10 +628,20 @@
     renderSupportThread(filtered.find((thread) => thread.id === activeSupportThreadId) || null);
   }
 
-  function appendAdminReply(threadId, text) {
+  async function appendAdminReply(threadId, text) {
     const message = String(text || "").trim();
     if (!message) return;
     const now = new Date().toISOString();
+    if (api?.enabled) {
+      const data = await api.fetch(`/api/support/threads/${threadId}/replies`, {
+        method: "POST",
+        body: { authorType: "admin", authorName: adminT("adminName"), text: message },
+      });
+      if (data?.thread) {
+        upsertThreadLocal(data.thread);
+        return;
+      }
+    }
     saveSupportThreads(
       normalizeSupportThreads().map((thread) =>
         thread.id === threadId
@@ -909,7 +945,10 @@
     renderAll();
   }
 
-  function renderAll() {
+  async function renderAll() {
+    if (api?.enabled) {
+      await fetchSupportThreadsFromApi();
+    }
     const orders = getOrders();
     const users = getUsersList();
     const threads = normalizeSupportThreads();
@@ -959,6 +998,12 @@
     setAuthState(isAdminLoggedIn());
     bindAdminSettings();
     if (isAdminLoggedIn()) renderAll();
+    if (api?.enabled) {
+      window.setInterval(() => {
+        if (document.hidden) return;
+        renderAll();
+      }, 3000);
+    }
 
     loginForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -981,10 +1026,10 @@
       setAuthState(false);
     });
 
-    adminSupportReplyForm?.addEventListener("submit", (event) => {
+    adminSupportReplyForm?.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!activeSupportThreadId) return;
-      appendAdminReply(activeSupportThreadId, adminSupportComposer.value);
+      await appendAdminReply(activeSupportThreadId, adminSupportComposer.value);
       adminSupportReplyForm.reset();
       renderAll();
     });
