@@ -986,6 +986,19 @@
     document.querySelectorAll("[data-close-product]").forEach((element) => element.addEventListener("click", closeProductModal));
   }
 
+  function placeHeaderSwitchers() {
+    const switchers = document.querySelector(".header-switchers");
+    const navSlot = document.getElementById("navSwitchers");
+    const headerActions = document.querySelector(".header__actions");
+    if (!switchers || !navSlot || !headerActions) return;
+    const isMobile = window.matchMedia("(max-width: 640px)").matches;
+    if (isMobile && switchers.parentElement !== navSlot) {
+      navSlot.appendChild(switchers);
+    } else if (!isMobile && switchers.parentElement !== headerActions) {
+      headerActions.insertBefore(switchers, headerActions.firstChild);
+    }
+  }
+
   function init() {
     currentProducts();
     syncCartWithProducts();
@@ -996,6 +1009,12 @@
     initHeroParallax();
     renderHeroSlide();
     syncUserDataFromApi();
+    placeHeaderSwitchers();
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(placeHeaderSwitchers, 150);
+    });
 
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") return;
